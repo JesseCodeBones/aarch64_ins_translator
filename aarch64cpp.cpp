@@ -61,7 +61,25 @@ uint32_t Aarch64CPP::mov_wide_immediate(uint8_t hw,  uint16_t imm16, uint8_t rd)
         return result;
 }
 
+uint32_t Aarch64CPP::add_with_tag(uint8_t rd, uint8_t rn, uint8_t imm4_tag_offset, uint8_t imm6_offset) {
+        uint32_t result = 0b10010001100000000000000000000000;
+        result = (rd & 0b11111) << 0 | result;
+        result = (rn & 0b11111) << 5 | result;
+        result = (imm4_tag_offset & 0b1111) << 10 | result;
+        result = (imm6_offset & 0b111111) << 16 | result;
+        return result;
+}
 
+uint32_t Aarch64CPP::add_extended_register_set_flags(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t option, uint8_t imm3) {
+        uint32_t result = 0b00101011001000000000000000000000;
+        result = (sf & 0b1) << 31 | result;
+        result = (rd & 0b11111) << 0 | result;
+        result = (rn & 0b11111) << 5 | result;
+        result = (rm & 0b11111) << 16 | result;
+        result = (option & 0b111) << 13 | result;
+        result = (imm3 & 0b111) << 10 | result;
+        return result;
+}
 
 uint32_t Aarch64CPP::ret_rn(uint8_t rn) {
        uint32_t result = 0xd65f0000;
