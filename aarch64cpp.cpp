@@ -30,6 +30,28 @@ uint32_t Aarch64CPP::add_extended_register(uint8_t sf, uint8_t rd, uint8_t rn, u
         return result;
 }
 
+uint32_t Aarch64CPP::add_immediate(uint8_t sf, uint8_t rd, uint8_t rn, uint16_t imm12, uint8_t shift) {
+        uint32_t result = 0b00010001000000000000000000000000;
+        result = (sf & 0b1) << 31 | result;
+        result = (rd & 0b11111) << 0 | result;
+        result = (rn & 0b11111) << 5 | result;
+        result = (imm12 & 0b111111111111) << 10 | result;
+        result = (shift & 0b1) << 22 | result;
+        return result;
+}
+
+uint32_t Aarch64CPP::add_shift_register(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6) {
+        uint32_t result = 0b00001011000000000000000000000000;
+        result = (sf & 0b1) << 31 | result;
+        result = (rd & 0b11111) << 0 | result;
+        result = (rn & 0b11111) << 5 | result;
+        result = (rm & 0b11111) << 16 | result;
+        result = (shift & 0b11) << 22 | result;
+        result = (imm6 & 0b111111) << 10 | result;
+        return result;
+}
+
+
 
 uint32_t Aarch64CPP::mov_wide_immediate(uint8_t hw,  uint16_t imm16, uint8_t rd) {
         uint32_t result = 0b1010010100000000000000000000000;

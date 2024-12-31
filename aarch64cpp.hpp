@@ -35,6 +35,34 @@ public:
      */
     static uint32_t add_extended_register(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t option, uint8_t imm3);
 
+    /**
+        @param sf 0 32bit, 1 64bit
+        @param imm16 16bit immediate value
+        @param rd Destination register
+        @param rn First operand register
+        @param shift 0 0, 1 12
+        https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/MOVN--Move-Wide-Immediate--ARM-
+        case sh of
+        when '0' imm = ZeroExtend(imm12, datasize);
+        when '1' imm = ZeroExtend(imm12 : Zeros(12), datasize);
+     */
+    static uint32_t add_immediate(uint8_t sf, uint8_t rd, uint8_t rn, uint16_t imm12, uint8_t shift);
+
+
+    /**
+        @param sf 0 32bit, 1 64bit
+        @param rd Destination register
+        @param rn First operand register
+        @param rm Second operand register (shift this register value)
+        @param shift    00	LSL         Logical shift left 
+                        01	LSR         Logical shift right
+                        10	ASR         Arithmetic shift right
+                        11	RESERVED    not working!!
+        @param imm6 6bit immediate value
+        https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ADD--shifted-register---Add--shifted-register--
+     */
+    static uint32_t add_shift_register(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6);
+
     static uint32_t mov_wide_immediate(uint8_t hw,  uint16_t imm16, uint8_t rd);
     static uint32_t ret_rn(uint8_t rn);
     
