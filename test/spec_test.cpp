@@ -147,6 +147,50 @@ TEST(spec, test_adcs) {
 
 
 
+TEST(spec, test_add_extended_register) {
+  std::vector<uint8_t> executable = {};
+
+  auto storex = storeX29X30();
+  executable.insert(executable.end(), storex.begin(), storex.end());
+  auto r29tor31 = mov_register_register_from_to_sp(29, 31);
+  executable.insert(executable.end(), r29tor31.begin(), r29tor31.end());
+
+
+  // main logic instructions
+{
+  // mov X0, 21
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0x1, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov X1, 21
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 0xffff, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // add_extended_register X0, X0, X1
+  auto addExtendedRegisterIns = Aarch64CPP::add_extended_register(1, 0, 0, 1, 0b000, 1);
+  // 1 + (0xff << 1)
+  auto adds = littleEdian(addExtendedRegisterIns);
+  executable.insert(executable.end(), adds.begin(), adds.end());
+}
+
+
+
+  auto r31tor29 = mov_register_register_from_to_sp(31, 29);
+  executable.insert(executable.end(), r31tor29.begin(), r31tor29.end());
+  auto loadx = loadX29X30();
+  executable.insert(executable.end(), loadx.begin(), loadx.end());
+  auto retIns = Aarch64CPP::ret_rn(30); // use x30 as return register
+  auto ret = littleEdian(retIns);
+  executable.insert(executable.end(), ret.begin(), ret.end());
+
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0x1ff, result);
+}
+
+
 
 TEST(demo_test, return_42) {
   std::vector<uint8_t> executable = {};
