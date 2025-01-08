@@ -74,32 +74,15 @@ TEST(demo_test, always_change) {
   ASSERT_EQ(2583756833, result);
 }
 
-TEST(spec, test_adc) {
-  std::vector<uint8_t> executable = {};
 
+void prepare(std::vector<uint8_t> &executable) {
   auto storex = storeX29X30();
   executable.insert(executable.end(), storex.begin(), storex.end());
   auto r29tor31 = mov_register_register_from_to_sp(29, 31);
   executable.insert(executable.end(), r29tor31.begin(), r29tor31.end());
+}
 
-  // main logic instructions
-  {
-    // mov X0, 21
-    auto movIns = Aarch64CPP::mov_wide_immediate(0, 21, 0);
-    auto mov = littleEdian(movIns);
-    executable.insert(executable.end(), mov.begin(), mov.end());
-
-    // mov X1, 21
-    auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 21, 1);
-    auto mov2 = littleEdian(movIns2);
-    executable.insert(executable.end(), mov2.begin(), mov2.end());
-
-    // adc X0, X0, X1
-    auto adcIns = Aarch64CPP::adc(1, 0, 0, 1);
-    auto adc = littleEdian(adcIns);
-    executable.insert(executable.end(), adc.begin(), adc.end());
-  }
-
+void teardown(std::vector<uint8_t> &executable) {
   auto r31tor29 = mov_register_register_from_to_sp(31, 29);
   executable.insert(executable.end(), r31tor29.begin(), r31tor29.end());
   auto loadx = loadX29X30();
@@ -107,11 +90,70 @@ TEST(spec, test_adc) {
   auto retIns = Aarch64CPP::ret_rn(30); // use x30 as return register
   auto ret = littleEdian(retIns);
   executable.insert(executable.end(), ret.begin(), ret.end());
+}
+
+TEST(spec, test_adc) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov X0, 21
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 21, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov X1, 21
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 21, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // adc X0, X0, X1
+  auto adcIns = Aarch64CPP::adc(1, 0, 0, 1);
+  auto adc = littleEdian(adcIns);
+  executable.insert(executable.end(), adc.begin(), adc.end());
+  teardown(executable);
 
   FuncPtr func = createJit(executable);
   int result = func();
   ASSERT_TRUE(42 == result || 43 == result);
 }
+
+// TEST(spec, test_adc) {
+//   std::vector<uint8_t> executable = {};
+
+//   auto storex = storeX29X30();
+//   executable.insert(executable.end(), storex.begin(), storex.end());
+//   auto r29tor31 = mov_register_register_from_to_sp(29, 31);
+//   executable.insert(executable.end(), r29tor31.begin(), r29tor31.end());
+
+//   // main logic instructions
+//   {
+//     // mov X0, 21
+//     auto movIns = Aarch64CPP::mov_wide_immediate(0, 21, 0);
+//     auto mov = littleEdian(movIns);
+//     executable.insert(executable.end(), mov.begin(), mov.end());
+
+//     // mov X1, 21
+//     auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 21, 1);
+//     auto mov2 = littleEdian(movIns2);
+//     executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+//     // adc X0, X0, X1
+//     auto adcIns = Aarch64CPP::adc(1, 0, 0, 1);
+//     auto adc = littleEdian(adcIns);
+//     executable.insert(executable.end(), adc.begin(), adc.end());
+//   }
+
+//   auto r31tor29 = mov_register_register_from_to_sp(31, 29);
+//   executable.insert(executable.end(), r31tor29.begin(), r31tor29.end());
+//   auto loadx = loadX29X30();
+//   executable.insert(executable.end(), loadx.begin(), loadx.end());
+//   auto retIns = Aarch64CPP::ret_rn(30); // use x30 as return register
+//   auto ret = littleEdian(retIns);
+//   executable.insert(executable.end(), ret.begin(), ret.end());
+
+//   FuncPtr func = createJit(executable);
+//   int result = func();
+//   ASSERT_TRUE(42 == result || 43 == result);
+// }
 
 TEST(spec, test_adcs) {
   std::vector<uint8_t> executable = {};
@@ -444,6 +486,96 @@ TEST(spec, test_add_pc_and_imm_page) {
   std::cout
       << "adr pc instruction with page result: " << std::hex << result
       << std::endl; // only print the value, PC address is runtime determined
+}
+
+TEST(spec, test_logic_and_immediate) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // logic and x0 with 0b11
+  auto logicAndIns = Aarch64CPP::logic_and_immediate(0, 0, 0, 0, 0, 0b111001);
+  auto logicAnd = littleEdian(logicAndIns);
+  executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b11, result);
+}
+
+TEST(spec, test_logic_and_shifted_register) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov 0b1100 to x1
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 0b1100, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // logic and x0 x1 to x0
+  auto logicAndIns = Aarch64CPP::logic_and_shifted_register(0, 0, 0, 1, 0, 0);
+  auto logicAnd = littleEdian(logicAndIns);
+  executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b1100, result);
+}
+
+TEST(spec, test_logic_and_immediate_set_flags) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // logic and x0 with 0b11
+  auto logicAndIns = Aarch64CPP::logic_and_immediate_set_flags(0, 0, 0, 0, 0, 0b111001);
+  auto logicAnd = littleEdian(logicAndIns);
+  executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b11, result);
+}
+
+TEST(spec, test_logic_and_shifted_register_set_flags) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov 0b1100 to x1
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 0b1100, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // logic and x0 x1 to x0
+  auto logicAndIns = Aarch64CPP::logic_and_shifted_register_set_flags(0, 0, 0, 1, 0, 0);
+  auto logicAnd = littleEdian(logicAndIns);
+  executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b1100, result);
 }
 
 TEST(demo_test, return_42) {
