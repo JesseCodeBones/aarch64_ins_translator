@@ -74,7 +74,6 @@ TEST(demo_test, always_change) {
   ASSERT_EQ(2583756833, result);
 }
 
-
 void prepare(std::vector<uint8_t> &executable) {
   auto storex = storeX29X30();
   executable.insert(executable.end(), storex.begin(), storex.end());
@@ -543,7 +542,8 @@ TEST(spec, test_logic_and_immediate_set_flags) {
   executable.insert(executable.end(), mov.begin(), mov.end());
 
   // logic and x0 with 0b11
-  auto logicAndIns = Aarch64CPP::logic_and_immediate_set_flags(0, 0, 0, 0, 0, 0b111001);
+  auto logicAndIns =
+      Aarch64CPP::logic_and_immediate_set_flags(0, 0, 0, 0, 0, 0b111001);
   auto logicAnd = littleEdian(logicAndIns);
   executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
 
@@ -568,7 +568,8 @@ TEST(spec, test_logic_and_shifted_register_set_flags) {
   executable.insert(executable.end(), mov2.begin(), mov2.end());
 
   // logic and x0 x1 to x0
-  auto logicAndIns = Aarch64CPP::logic_and_shifted_register_set_flags(0, 0, 0, 1, 0, 0);
+  auto logicAndIns =
+      Aarch64CPP::logic_and_shifted_register_set_flags(0, 0, 0, 1, 0, 0);
   auto logicAnd = littleEdian(logicAndIns);
   executable.insert(executable.end(), logicAnd.begin(), logicAnd.end());
 
@@ -576,6 +577,84 @@ TEST(spec, test_logic_and_shifted_register_set_flags) {
   FuncPtr func = createJit(executable);
   int result = func();
   ASSERT_EQ(0b1100, result);
+}
+
+TEST(spec, test_arithmetic_shift_right_immediate) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // asr x0, x0, 2
+  auto arithmeticShiftRightIns =
+      Aarch64CPP::arithmetic_shift_right_immediate(0, 0, 0, 0, 2, 0);
+  auto arithmeticShiftRight = littleEdian(arithmeticShiftRightIns);
+  executable.insert(executable.end(), arithmeticShiftRight.begin(),
+                    arithmeticShiftRight.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b11, result);
+}
+
+TEST(spec, test_arithmetic_shift_right_register) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov 0b10 to x1
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 0b10, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // asr x0, x0, x1
+  // rm shift amount is x1
+  auto arithmeticShiftRightIns =
+      Aarch64CPP::arithmetic_shift_right_register(0, 0, 0, 1);
+  auto arithmeticShiftRight = littleEdian(arithmeticShiftRightIns);
+  executable.insert(executable.end(), arithmeticShiftRight.begin(),
+                    arithmeticShiftRight.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b11, result);
+}
+
+TEST(spec, test_arithmetic_shift_right_variable) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  // mov 0b1111 to x0
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0b1111, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // mov 0b10 to x1
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 0b10, 1);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+
+  // asrv x0, x0, x1
+  // rm shift amount is x1
+  auto arithmeticShiftRightIns =
+      Aarch64CPP::arithmetic_shift_right_variable(0, 0, 0, 1);
+  auto arithmeticShiftRight = littleEdian(arithmeticShiftRightIns);
+  executable.insert(executable.end(), arithmeticShiftRight.begin(),
+                    arithmeticShiftRight.end());
+
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(0b11, result);
 }
 
 TEST(demo_test, return_42) {

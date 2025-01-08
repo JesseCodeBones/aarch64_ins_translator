@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdint.h>
 class Aarch64CPP {
 public:
@@ -141,7 +142,8 @@ public:
                                       uint8_t rd);
 
   /**
-  Bitwise AND (immediate) performs a bitwise AND of a register value and an immediate value, and writes the result to the destination register.
+  Bitwise AND (immediate) performs a bitwise AND of a register value and an
+  immediate value, and writes the result to the destination register.
     @param sf 0 32bit, 1 64bit
     @param rd Destination register
     @param rn First operand register
@@ -149,52 +151,111 @@ public:
     @param immr 6bit immediate value
     @param imms 6bit immediate value
    */
-   static uint32_t logic_and_immediate(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t n, uint8_t immr, uint8_t imms);
+  static uint32_t logic_and_immediate(uint8_t sf, uint8_t rd, uint8_t rn,
+                                      uint8_t n, uint8_t immr, uint8_t imms);
 
-    /**
-    Bitwise AND (shifted register) performs a bitwise AND of a register value and a value shifted left by an immediate value, and writes the result to the destination register.
-    @param sf 0 32bit, 1 64bit
-    @param rd Destination register
-    @param rn First operand register
-    @param rm Second operand register
-    @param shift    00	LSL         Logical shift left
-                  01	LSR         Logical shift right
-                  10	ASR         Arithmetic shift right
-                  11	RESERVED    not working!!
-    @param imm6 6bit immediate value
-    https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/AND--shifted-register---Bitwise-AND--shifted-register--
-    */
-   static uint32_t logic_and_shifted_register(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6);
+  /**
+  Bitwise AND (shifted register) performs a bitwise AND of a register value and
+  a value shifted left by an immediate value, and writes the result to the
+  destination register.
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param rm Second operand register
+  @param shift    00	LSL         Logical shift left
+                01	LSR         Logical shift right
+                10	ASR         Arithmetic shift right
+                11	RESERVED    not working!!
+  @param imm6 6bit immediate value
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/AND--shifted-register---Bitwise-AND--shifted-register--
+  */
+  static uint32_t logic_and_shifted_register(uint8_t sf, uint8_t rd, uint8_t rn,
+                                             uint8_t rm, uint8_t shift,
+                                             uint8_t imm6);
 
+  /**
+  Bitwise AND (immediate), setting flags, performs a bitwise AND of a register
+  value and an immediate value, and writes the result to the destination
+  register. It updates the condition flags based on the result.
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param n 0 32bit, 1 64bit
+  @param immr 6bit immediate value
+  @param imms 6bit immediate value
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ANDS--immediate---Bitwise-AND--immediate---setting-flags-
+   */
+  static uint32_t logic_and_immediate_set_flags(uint8_t sf, uint8_t rd,
+                                                uint8_t rn, uint8_t n,
+                                                uint8_t immr, uint8_t imms);
 
-    /**
-    Bitwise AND (immediate), setting flags, performs a bitwise AND of a register value and an immediate value, and writes the result to the destination register. It updates the condition flags based on the result.
-    @param sf 0 32bit, 1 64bit
-    @param rd Destination register
-    @param rn First operand register
-    @param n 0 32bit, 1 64bit
-    @param immr 6bit immediate value
-    @param imms 6bit immediate value
-    https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ANDS--immediate---Bitwise-AND--immediate---setting-flags-
-     */
-   static uint32_t logic_and_immediate_set_flags(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t n, uint8_t immr, uint8_t imms);
+  /**
+  Bitwise AND (shifted register), setting flags, performs a bitwise AND of a
+  register value and an optionally-shifted register value, and writes the result
+  to the destination register. It updates the condition flags based on the
+  result.
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param rm Second operand register
+  @param shift    00	LSL         Logical shift left
+                01	LSR         Logical shift right
+                10	ASR         Arithmetic shift right
+                11	RESERVED    not working!!
+  @param imm6 6bit immediate value
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ANDS--shifted-register---Bitwise-AND--shifted-register---setting-flags-
+   */
+  static uint32_t logic_and_shifted_register_set_flags(uint8_t sf, uint8_t rd,
+                                                       uint8_t rn, uint8_t rm,
+                                                       uint8_t shift,
+                                                       uint8_t imm6);
 
+  /**
+  Bitwise AND (shifted register), setting flags, performs a bitwise AND of a
+  register value and a value shifted left by an immediate value, and writes the
+  result to the destination register. It updates the condition flags based on
+  the result.
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param n 0 32bit, 1 64bit
+  @param immr 6bit immediate value
+  @param x 0 32bit, 1 64bit
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ASR--immediate---Arithmetic-Shift-Right--immediate---an-alias-of-SBFM-
+   */
+  static uint32_t arithmetic_shift_right_immediate(uint8_t sf, uint8_t rd,
+                                                   uint8_t rn, uint8_t n,
+                                                   uint8_t immr, uint8_t x);
+  /**
+  Arithmetic Shift Right (register) shifts a register value right by a variable
+  number of bits, shifting in copies of its sign bit, and writes the result to
+  the destination register. The remainder obtained by dividing the second source
+  register by the data size defines the number of bits by which the first source
+  register is right-shifted.
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param rm Second operand register
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ASR--register---Arithmetic-Shift-Right--register---an-alias-of-ASRV-
+   */
+  static uint32_t arithmetic_shift_right_register(uint8_t sf, uint8_t rd,
+                                                  uint8_t rn, uint8_t rm);
+  /**
+  Arithmetic Shift Right Variable shifts a register value right by a variable
+  number of bits, shifting in copies of its sign bit, and writes the result to
+  the destination register. The remainder obtained by dividing the second source
+  register by the data size defines the number of bits by which the first source
+  register is right-shifted.
 
-    /**
-    Bitwise AND (shifted register), setting flags, performs a bitwise AND of a register value and an optionally-shifted register value, and writes the result to the destination register. It updates the condition flags based on the result.
-    @param sf 0 32bit, 1 64bit
-    @param rd Destination register
-    @param rn First operand register
-    @param rm Second operand register
-    @param shift    00	LSL         Logical shift left
-                  01	LSR         Logical shift right
-                  10	ASR         Arithmetic shift right
-                  11	RESERVED    not working!!
-    @param imm6 6bit immediate value
-    https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ANDS--shifted-register---Bitwise-AND--shifted-register---setting-flags-
-     */
-   static uint32_t logic_and_shifted_register_set_flags(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6);
+  @param sf 0 32bit, 1 64bit
+  @param rd Destination register
+  @param rn First operand register
+  @param rm Second operand register
+  https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/ASRV--Arithmetic-Shift-Right-Variable-
 
+   */
+  static uint32_t arithmetic_shift_right_variable(uint8_t sf, uint8_t rd,
+                                                  uint8_t rn, uint8_t rm);
   static uint32_t mov_wide_immediate(uint8_t hw, uint16_t imm16, uint8_t rd);
   static uint32_t ret_rn(uint8_t rn);
 };

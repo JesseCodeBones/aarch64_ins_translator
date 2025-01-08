@@ -132,7 +132,9 @@ uint32_t Aarch64CPP::add_extended_register_set_flags(uint8_t sf, uint8_t rd,
   return result;
 }
 
-uint32_t Aarch64CPP::logic_and_immediate(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t n, uint8_t immr, uint8_t imms) {
+uint32_t Aarch64CPP::logic_and_immediate(uint8_t sf, uint8_t rd, uint8_t rn,
+                                         uint8_t n, uint8_t immr,
+                                         uint8_t imms) {
   uint32_t result = 0b00010010000000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (rd & 0b11111) << 0 | result;
@@ -143,7 +145,9 @@ uint32_t Aarch64CPP::logic_and_immediate(uint8_t sf, uint8_t rd, uint8_t rn, uin
   return result;
 }
 
-uint32_t Aarch64CPP::logic_and_shifted_register(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6) {
+uint32_t Aarch64CPP::logic_and_shifted_register(uint8_t sf, uint8_t rd,
+                                                uint8_t rn, uint8_t rm,
+                                                uint8_t shift, uint8_t imm6) {
   uint32_t result = 0b00001010000000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (rd & 0b11111) << 0 | result;
@@ -154,7 +158,9 @@ uint32_t Aarch64CPP::logic_and_shifted_register(uint8_t sf, uint8_t rd, uint8_t 
   return result;
 }
 
-uint32_t Aarch64CPP::logic_and_immediate_set_flags(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t n, uint8_t immr, uint8_t imms) {
+uint32_t Aarch64CPP::logic_and_immediate_set_flags(uint8_t sf, uint8_t rd,
+                                                   uint8_t rn, uint8_t n,
+                                                   uint8_t immr, uint8_t imms) {
   uint32_t result = 0b01110010000000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (rd & 0b11111) << 0 | result;
@@ -165,7 +171,10 @@ uint32_t Aarch64CPP::logic_and_immediate_set_flags(uint8_t sf, uint8_t rd, uint8
   return result;
 }
 
-uint32_t Aarch64CPP::logic_and_shifted_register_set_flags(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm, uint8_t shift, uint8_t imm6) {
+uint32_t
+Aarch64CPP::logic_and_shifted_register_set_flags(uint8_t sf, uint8_t rd,
+                                                 uint8_t rn, uint8_t rm,
+                                                 uint8_t shift, uint8_t imm6) {
   uint32_t result = 0b01101010000000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (rd & 0b11111) << 0 | result;
@@ -173,6 +182,39 @@ uint32_t Aarch64CPP::logic_and_shifted_register_set_flags(uint8_t sf, uint8_t rd
   result = (rm & 0b11111) << 16 | result;
   result = (shift & 0b11) << 22 | result;
   result = (imm6 & 0b111111) << 10 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::arithmetic_shift_right_immediate(uint8_t sf, uint8_t rd,
+                                                      uint8_t rn, uint8_t n,
+                                                      uint8_t immr, uint8_t x) {
+  uint32_t result = 0b00010011000000000111110000000000;
+  result = (sf & 0b1) << 31 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  result = (n & 0b1) << 22 | result;
+  result = (immr & 0b111111) << 16 | result;
+  result = (x & 0b1) << 15 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::arithmetic_shift_right_register(uint8_t sf, uint8_t rd,
+                                                     uint8_t rn, uint8_t rm) {
+  uint32_t result = 0b00011010110000000010100000000000;
+  result = (sf & 0b1) << 31 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  result = (rm & 0b11111) << 16 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::arithmetic_shift_right_variable(uint8_t sf, uint8_t rd,
+                                                     uint8_t rn, uint8_t rm) {
+  uint32_t result = 0b00011010110000000010100000000000;
+  result = (sf & 0b1) << 31 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  result = (rm & 0b11111) << 16 | result;
   return result;
 }
 
