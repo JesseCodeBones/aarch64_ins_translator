@@ -677,7 +677,8 @@ TEST(spec, test_arithmetic_shift_right_variable) {
   ASSERT_EQ(0b11, result);
 }
 
-void embedMov64ToRegister(uint64_t value, uint32_t rd, std::vector<uint8_t> &executable) {
+void embedMov64ToRegister(uint64_t value, uint32_t rd,
+                          std::vector<uint8_t> &executable) {
   uint16_t lowest = value & 0xffff;
   auto movzIns = Aarch64CPP::move_imm16_zero(1, 0, lowest, rd);
   auto movz = littleEdian(movzIns);
@@ -701,17 +702,46 @@ void embedMov64ToRegister(uint64_t value, uint32_t rd, std::vector<uint8_t> &exe
 
 TEST(spec, test_address_translate) {
   // address translate require the MMU knowledge, TODO handle it in future
-//   需要在特权级别（通常是 EL1 或更高）下使用。
-// 不会直接修改内存内容或指针值。
+  //   需要在特权级别（通常是 EL1 或更高）下使用。
+  // 不会直接修改内存内容或指针值。
   std::vector<uint8_t> executable = {};
   prepare(executable);
-  void* addr = malloc(sizeof(int32_t));
+  void *addr = malloc(sizeof(int32_t));
   embedMov64ToRegister((uint64_t)addr, 0, executable);
-  auto addressTranslateIns = Aarch64CPP::address_translate(0b100,0,0b111,0);
+  auto addressTranslateIns = Aarch64CPP::address_translate(0b100, 0, 0b111, 0);
   auto addressTranslate = littleEdian(addressTranslateIns);
-  executable.insert(executable.end(), addressTranslate.begin(), addressTranslate.end());
+  executable.insert(executable.end(), addressTranslate.begin(),
+                    addressTranslate.end());
   teardown(executable);
   free(addr);
+}
+
+TEST(spec, test_branch_immediate) {
+  // address translate require the MMU knowledge, TODO handle it in future
+  //   需要在特权级别（通常是 EL1 或更高）下使用。
+  // 不会直接修改内存内容或指针值。
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #42
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+  // b 0x4
+  // pc 指向当前指令，所以跳转到下一条指令，所以跳过当前指令，需要+2
+  // branch指令会补齐00在最后，所以需要右移两位
+  auto branchIns = Aarch64CPP::branch_immediate(0x2);
+  auto branch = littleEdian(branchIns);
+  executable.insert(executable.end(), branch.begin(), branch.end());
+
+  // mov 24 to x0
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 24, 0);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+  teardown(executable);
+
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(42, result);
 }
 
 TEST(demo_test, return_42) {
