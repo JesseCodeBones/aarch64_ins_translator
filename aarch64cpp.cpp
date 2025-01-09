@@ -108,7 +108,8 @@ uint32_t Aarch64CPP::mov_wide_immediate(uint8_t hw, uint16_t imm16,
   return result;
 }
 
-uint32_t Aarch64CPP::move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd) {
+uint32_t Aarch64CPP::move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16,
+                                     uint8_t rd) {
   uint32_t result = 0b01010010100000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (hw & 0b11) << 21 | result;
@@ -117,7 +118,8 @@ uint32_t Aarch64CPP::move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16, uin
   return result;
 }
 
-uint32_t Aarch64CPP::move_imm16_keep(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd){
+uint32_t Aarch64CPP::move_imm16_keep(uint8_t sf, uint8_t hw, uint16_t imm16,
+                                     uint8_t rd) {
   uint32_t result = 0b01110010100000000000000000000000;
   result = (sf & 0b1) << 31 | result;
   result = (hw & 0b11) << 21 | result;
@@ -237,7 +239,8 @@ uint32_t Aarch64CPP::arithmetic_shift_right_variable(uint8_t sf, uint8_t rd,
   return result;
 }
 
-uint32_t Aarch64CPP::address_translate(uint8_t op1, uint8_t x, uint8_t op2, uint8_t rt) {
+uint32_t Aarch64CPP::address_translate(uint8_t op1, uint8_t x, uint8_t op2,
+                                       uint8_t rt) {
   uint32_t result = 0b11010101000010000111100000000000;
   result = (op1 & 0b111) << 16 | result;
   result = (x & 0b1) << 8 | result;
@@ -246,6 +249,44 @@ uint32_t Aarch64CPP::address_translate(uint8_t op1, uint8_t x, uint8_t op2, uint
   return result;
 }
 
+uint32_t Aarch64CPP::authenticate_data_address_A(uint8_t z, uint8_t rd,
+                                                 uint8_t rn) {
+  uint32_t result = 0b11011010110000010001100000000000;
+  result = (z & 0b1) << 13 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::authenticate_data_address_B(uint8_t z, uint8_t rd,
+                                                 uint8_t rn) {
+  uint32_t result = 0b11011010110000010001110000000000;
+  result = (z & 0b1) << 13 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::authenticate_instruction_address_A(uint8_t z, uint8_t rd,
+                                                        uint8_t rn) {
+  uint32_t result = 0b11011010110000010001000000000000;
+  result = (z & 0b1) << 13 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::authenticate_instruction_address_B(uint8_t z, uint8_t rd,
+                                                        uint8_t rn) {
+  uint32_t result = 0b11011010110000010001010000000000;
+  result = (z & 0b1) << 13 | result;
+  result = (rd & 0b11111) << 0 | result;
+  result = (rn & 0b11111) << 5 | result;
+  return result;
+}
+uint32_t Aarch64CPP::ax_flag() {
+  return 0b11010101000000000100000001011111;
+}
 uint32_t Aarch64CPP::ret_rn(uint8_t rn) {
   uint32_t result = 0xd65f0000;
   result = (rn & 0b11111) << 5 | result;

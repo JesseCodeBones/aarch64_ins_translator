@@ -263,22 +263,22 @@ public:
 
     AT <at_op>, <Xt>
     is equivalent to
-    SYS #<op1>, C7, <Cm>, #<op2>, <Xt>        
+    SYS #<op1>, C7, <Cm>, #<op2>, <Xt>
 
     示例
     假设我们有以下情况：
 
     AT S1E1R, X0
     S1E1R: 这是访问类型操作符，表示一级转换表的只读访问。
-    X0: 这是寄存器，包含要访问的内存地址。  
+    X0: 这是寄存器，包含要访问的内存地址。
 
     结果存储：
     翻译结果会更新一些系统寄存器，如 PAR_EL1（Physical Address Register）。
-    PAR_EL1 包含翻译后的物理地址和一些状态信息（如访问权限错误）。   
+    PAR_EL1 包含翻译后的物理地址和一些状态信息（如访问权限错误）。
 
     操作系统负责创建、管理和更新页表。
     操作系统会设置页表基址寄存器（如 TTBR0_EL1 和 TTBR1_EL1）以指向有效的页表。
-    操作系统还负责处理页表中的权限和访问控制。     
+    操作系统还负责处理页表中的权限和访问控制。
 
     op1	CRm<0>	op2	<at_op>	 Architectural Feature
     000	0	    000	         S1E1R	-
@@ -294,30 +294,106 @@ public:
     100	0	    110	         S12E0R	-
     100	0	    111	         S12E0W	-
     110	0	    000	         S1E3R	-
-    110	0	    001	         S1E3W	-                              
-    
+    110	0	    001	         S1E3W	-
+
    */
-  static uint32_t address_translate(uint8_t op1, uint8_t x, uint8_t op2, uint8_t rt);
+  static uint32_t address_translate(uint8_t op1, uint8_t x, uint8_t op2,
+                                    uint8_t rt);
 
   /**
-  Move wide with keep moves an optionally-shifted 16-bit immediate value into a register, keeping other bits unchanged.
+  Move wide with keep moves an optionally-shifted 16-bit immediate value into a
+  register, keeping other bits unchanged.
   @param sf 0 32bit, 1 64bit
-  @param hw shift the immediate left, either 0 (the default), 16, 32 or 48, encoded in the "hw" field as <shift>/16.
+  @param hw shift the immediate left, either 0 (the default), 16, 32 or 48,
+  encoded in the "hw" field as <shift>/16.
   @param imm16 16bit immediate value
   @param rd Destination register
   https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/MOVZ--Move-wide-with-zero-
    */
-  static uint32_t move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd);
+  static uint32_t move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16,
+                                  uint8_t rd);
   /**
-  Move wide with keep moves an optionally-shifted 16-bit immediate value into a register, keeping other bits unchanged.
+  Move wide with keep moves an optionally-shifted 16-bit immediate value into a
+  register, keeping other bits unchanged.
   @param sf 0 32bit, 1 64bit
-  @param hw shift the immediate left, either 0 (the default), 16, 32 or 48, encoded in the "hw" field as <shift>/16.
+  @param hw shift the immediate left, either 0 (the default), 16, 32 or 48,
+  encoded in the "hw" field as <shift>/16.
   @param imm16 16bit immediate value
   @param rd Destination register
   https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/MOVK--Move-wide-with-keep-
    */
-  static uint32_t move_imm16_keep(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd);
+  static uint32_t move_imm16_keep(uint8_t sf, uint8_t hw, uint16_t imm16,
+                                  uint8_t rd);
 
+  /**
+  只能在特权模式下执行，所以不准备有test
+
+  Authenticate Data address, using key A. This instruction authenticates a data
+  address, using a modifier and key A. The address is in the general-purpose
+  register that is specified by <Xd>.
+
+  @param z if z == 0, AUTDA Xd Xn, if z == 1, AUTDA Xd
+  @param rd Destination register
+  @param rn First operand register
+  */
+  static uint32_t authenticate_data_address_A(uint8_t z, uint8_t rd,
+                                              uint8_t rn);
+  /**
+    只能在特权模式下执行，所以不准备有test
+
+    Authenticate Data address, using key B. This instruction authenticates a
+data address, using a modifier and key B.
+
+The address is in the general-purpose register that is specified by <Xd>.
+
+    @param z if z == 0, AUTDB Xd Xn, if z == 1, AUTDB Xd
+    @param rd Destination register
+    @param rn First operand register
+    */
+  static uint32_t authenticate_data_address_B(uint8_t z, uint8_t rd,
+                                              uint8_t rn);
+  /**
+  只能在特权模式下执行，所以不准备有test
+
+  Authenticate Instruction address, using key A. This instruction
+  authenticates an instruction address, using a modifier and key A.
+
+  The address is:
+
+  In the general-purpose register that is specified by <Xd> for AUTIA and
+  AUTIZA. In X17, for AUTIA1716. In X30, for AUTIASP and AUTIAZ.
+
+    */
+  static uint32_t authenticate_instruction_address_A(uint8_t z, uint8_t rd,
+                                                     uint8_t rn);
+  /**
+只能在特权模式下执行，所以不准备有test
+
+Authenticate Instruction address, using key B. This instruction
+authenticates an instruction address, using a modifier and key B.
+
+The address is:
+
+In the general-purpose register that is specified by <Xd> for AUTIA and
+AUTIZA. In X17, for AUTIA1716. In X30, for AUTIASP and AUTIAZ.
+
+*/
+  static uint32_t authenticate_instruction_address_B(uint8_t z, uint8_t rd,
+                                                     uint8_t rn);
+  /**
+    转换PSTATE寄存器里存储标志位的格式，有些软件需要这个格式
+    该指令集没有输入，执行的时候，会转换PSTATE寄存器里存储标志位的格式
+    bit n = '0';
+    bit z = PSTATE.Z OR PSTATE.V;
+    bit c = PSTATE.C AND NOT(PSTATE.V);
+    bit v = '0';
+
+    PSTATE.N = n;
+    PSTATE.Z = z;
+    PSTATE.C = c;
+    PSTATE.V = v;
+   */
+  static uint32_t ax_flag();
   static uint32_t mov_wide_immediate(uint8_t hw, uint16_t imm16, uint8_t rd);
   static uint32_t ret_rn(uint8_t rn);
 };
