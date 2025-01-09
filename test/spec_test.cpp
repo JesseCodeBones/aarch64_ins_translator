@@ -11,6 +11,7 @@
 #include "../aarch64cpp.hpp"
 
 typedef int (*FuncPtr)();
+typedef uint64_t (*RetU64FuncPtr)();
 
 static FuncPtr createJit(const std::vector<uint8_t> &executable) {
   void *jitPtr = mmap(nullptr, 4096, PROT_READ | PROT_WRITE,
@@ -29,6 +30,25 @@ static FuncPtr createJit(const std::vector<uint8_t> &executable) {
   }
 
   return (FuncPtr)jitPtr;
+}
+
+static RetU64FuncPtr createRetU64Jit(const std::vector<uint8_t> &executable) {
+  void *jitPtr = mmap(nullptr, 4096, PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (jitPtr == MAP_FAILED) {
+    std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
+    return nullptr;
+  }
+
+  std::memcpy(jitPtr, executable.data(), executable.size());
+
+  if (mprotect(jitPtr, 4096, PROT_READ | PROT_EXEC) == -1) {
+    std::cerr << "mprotect failed: " << std::strerror(errno) << std::endl;
+    munmap(jitPtr, 4096);
+    return nullptr;
+  }
+
+  return (RetU64FuncPtr)jitPtr;
 }
 
 static std::vector<uint8_t> littleEdian(uint32_t value) {
@@ -655,6 +675,43 @@ TEST(spec, test_arithmetic_shift_right_variable) {
   FuncPtr func = createJit(executable);
   int result = func();
   ASSERT_EQ(0b11, result);
+}
+
+void embedMov64ToRegister(uint64_t value, uint32_t rd, std::vector<uint8_t> &executable) {
+  uint16_t lowest = value & 0xffff;
+  auto movzIns = Aarch64CPP::move_imm16_zero(1, 0, lowest, rd);
+  auto movz = littleEdian(movzIns);
+  executable.insert(executable.end(), movz.begin(), movz.end());
+
+  uint16_t low = (value >> 16) & 0xffff;
+  auto movkIns = Aarch64CPP::move_imm16_keep(1, 1, low, rd);
+  auto movk = littleEdian(movkIns);
+  executable.insert(executable.end(), movk.begin(), movk.end());
+
+  uint16_t high = (value >> 32) & 0xffff;
+  auto movkIns2 = Aarch64CPP::move_imm16_keep(1, 2, high, rd);
+  auto movk2 = littleEdian(movkIns2);
+  executable.insert(executable.end(), movk2.begin(), movk2.end());
+
+  uint16_t highest = (value >> 48) & 0xffff;
+  auto movkIns3 = Aarch64CPP::move_imm16_keep(1, 3, highest, rd);
+  auto movk3 = littleEdian(movkIns3);
+  executable.insert(executable.end(), movk3.begin(), movk3.end());
+}
+
+TEST(spec, test_address_translate) {
+  // address translate require the MMU knowledge, TODO handle it in future
+//   需要在特权级别（通常是 EL1 或更高）下使用。
+// 不会直接修改内存内容或指针值。
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  void* addr = malloc(sizeof(int32_t));
+  embedMov64ToRegister((uint64_t)addr, 0, executable);
+  auto addressTranslateIns = Aarch64CPP::address_translate(0b100,0,0b111,0);
+  auto addressTranslate = littleEdian(addressTranslateIns);
+  executable.insert(executable.end(), addressTranslate.begin(), addressTranslate.end());
+  teardown(executable);
+  free(addr);
 }
 
 TEST(demo_test, return_42) {

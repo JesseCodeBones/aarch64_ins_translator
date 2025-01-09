@@ -1,4 +1,5 @@
 #include "./aarch64cpp.hpp"
+#include <cstdint>
 #include <iostream>
 
 uint32_t Aarch64CPP::adc(uint8_t sf, uint8_t rd, uint8_t rn, uint8_t rm) {
@@ -101,6 +102,24 @@ uint32_t Aarch64CPP::add_pc_and_imm_page(uint8_t immlo, uint32_t immhi,
 uint32_t Aarch64CPP::mov_wide_immediate(uint8_t hw, uint16_t imm16,
                                         uint8_t rd) {
   uint32_t result = 0b1010010100000000000000000000000;
+  result = (hw & 0b11) << 21 | result;
+  result = (imm16 & 0b1111111111111111) << 5 | result;
+  result = (rd & 0b11111) << 0 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::move_imm16_zero(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd) {
+  uint32_t result = 0b01010010100000000000000000000000;
+  result = (sf & 0b1) << 31 | result;
+  result = (hw & 0b11) << 21 | result;
+  result = (imm16 & 0b1111111111111111) << 5 | result;
+  result = (rd & 0b11111) << 0 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::move_imm16_keep(uint8_t sf, uint8_t hw, uint16_t imm16, uint8_t rd){
+  uint32_t result = 0b01110010100000000000000000000000;
+  result = (sf & 0b1) << 31 | result;
   result = (hw & 0b11) << 21 | result;
   result = (imm16 & 0b1111111111111111) << 5 | result;
   result = (rd & 0b11111) << 0 | result;
@@ -215,6 +234,15 @@ uint32_t Aarch64CPP::arithmetic_shift_right_variable(uint8_t sf, uint8_t rd,
   result = (rd & 0b11111) << 0 | result;
   result = (rn & 0b11111) << 5 | result;
   result = (rm & 0b11111) << 16 | result;
+  return result;
+}
+
+uint32_t Aarch64CPP::address_translate(uint8_t op1, uint8_t x, uint8_t op2, uint8_t rt) {
+  uint32_t result = 0b11010101000010000111100000000000;
+  result = (op1 & 0b111) << 16 | result;
+  result = (x & 0b1) << 8 | result;
+  result = (op2 & 0b111) << 5 | result;
+  result = (rt & 0b11111) << 0 | result;
   return result;
 }
 
