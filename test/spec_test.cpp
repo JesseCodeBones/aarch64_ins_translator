@@ -777,7 +777,8 @@ TEST(spec, test_branch_immediate_consistent_conditional) {
   // b 2
   // pc 指向当前指令，所以跳转到下一条指令，所以跳过当前指令，需要+2
   // branch指令会补齐00在最后，所以需要右移两位
-  auto branchIns = Aarch64CPP::branch_immediate_consistent_conditional(0x2, 0b0111);
+  auto branchIns =
+      Aarch64CPP::branch_immediate_consistent_conditional(0x2, 0b0111);
   auto branch = littleEdian(branchIns);
   executable.insert(executable.end(), branch.begin(), branch.end());
 
@@ -793,18 +794,20 @@ TEST(spec, test_branch_immediate_consistent_conditional) {
 }
 
 TEST(spec, test_bitfield_clear) {
-  GTEST_SKIP() << "bitfield clear enabled in ARMv8.2-A, skip the test for some platform!!";
+  // GTEST_SKIP() << "bitfield clear enabled in ARMv8.2-A, skip the test for
+  // some "
+  //                 "platform!!";
   std::vector<uint8_t> executable = {};
   prepare(executable);
   // mov  x0 #0xfffffff'fffffffff
   embedMov64ToRegister(0xfffffff'fffffffff, 0, executable);
-  auto bitfieldIns = Aarch64CPP::bitfield_clear(1, 0, 0, 0b111001, 0);
+  auto bitfieldIns = Aarch64CPP::bitfield_clear(1, 1, 1, 0b111001, 0);
   auto bitfield = littleEdian(bitfieldIns);
   executable.insert(executable.end(), bitfield.begin(), bitfield.end());
   teardown(executable);
-  FuncPtr func = createJit(executable);
-  int result = func();
-  std::cout << "result is " << result << std::endl;
+  RetU64FuncPtr func = createRetU64Jit(executable);
+  uint64_t result = func();
+  ASSERT_EQ(0xfe00000000000000, result);
 }
 
 TEST(demo_test, return_42) {
@@ -831,4 +834,46 @@ TEST(demo_test, return_42) {
   FuncPtr func = createJit(executable);
   int result = func();
   ASSERT_EQ(42, result);
+}
+
+TEST(spec, test_bitfield_insert) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #0xfffffff'fffffffff
+  embedMov64ToRegister(0xfffffff'fffffffff, 0, executable);
+
+  // mov x1 #0xff
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0xff, 1);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // bfi x0, x1, 0, 0b111001, 0
+  auto bitfieldIns = Aarch64CPP::bitfield_insert(1, 1, 0, 0b111001, 0, 1);
+  auto bitfield = littleEdian(bitfieldIns);
+  executable.insert(executable.end(), bitfield.begin(), bitfield.end());
+  teardown(executable);
+  RetU64FuncPtr func = createRetU64Jit(executable);
+  uint64_t result = func();
+  ASSERT_EQ(0xfc000000000000ff, result);
+}
+
+TEST(spec, test_bitwise_bit_clear) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #0xfffffff'fffffffff
+  embedMov64ToRegister(0xfffffff'fffffffff, 0, executable);
+
+  // mov x1 #0xff
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 0xff, 1);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+
+  // bfi x0, x1, 0, 0b111001, 0
+  auto bitfieldIns = Aarch64CPP::bitwise_bit_clear(1, 0b10, 0, 0, 0, 1, 0);
+  auto bitfield = littleEdian(bitfieldIns);
+  executable.insert(executable.end(), bitfield.begin(), bitfield.end());
+  teardown(executable);
+  RetU64FuncPtr func = createRetU64Jit(executable);
+  uint64_t result = func();
+  ASSERT_EQ(0x00000000000000ff, result);
 }
