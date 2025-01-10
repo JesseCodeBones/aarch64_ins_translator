@@ -717,16 +717,13 @@ TEST(spec, test_address_translate) {
 }
 
 TEST(spec, test_branch_immediate) {
-  // address translate require the MMU knowledge, TODO handle it in future
-  //   需要在特权级别（通常是 EL1 或更高）下使用。
-  // 不会直接修改内存内容或指针值。
   std::vector<uint8_t> executable = {};
   prepare(executable);
   // mov  x0 #42
   auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
   auto mov = littleEdian(movIns);
   executable.insert(executable.end(), mov.begin(), mov.end());
-  // b 0x4
+  // b 2
   // pc 指向当前指令，所以跳转到下一条指令，所以跳过当前指令，需要+2
   // branch指令会补齐00在最后，所以需要右移两位
   auto branchIns = Aarch64CPP::branch_immediate(0x2);
@@ -742,6 +739,72 @@ TEST(spec, test_branch_immediate) {
   FuncPtr func = createJit(executable);
   int result = func();
   ASSERT_EQ(42, result);
+}
+
+TEST(spec, test_branch_immediate_conditional) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #42
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+  // b 2
+  // pc 指向当前指令，所以跳转到下一条指令，所以跳过当前指令，需要+2
+  // branch指令会补齐00在最后，所以需要右移两位
+  auto branchIns = Aarch64CPP::branch_immediate_conditional(0x2, 0b1110);
+  auto branch = littleEdian(branchIns);
+  executable.insert(executable.end(), branch.begin(), branch.end());
+
+  // mov 24 to x0
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 24, 0);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+  teardown(executable);
+
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(42, result);
+}
+
+TEST(spec, test_branch_immediate_consistent_conditional) {
+  GTEST_SKIP() << "Skipping this test temporarily.";
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #42
+  auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
+  auto mov = littleEdian(movIns);
+  executable.insert(executable.end(), mov.begin(), mov.end());
+  // b 2
+  // pc 指向当前指令，所以跳转到下一条指令，所以跳过当前指令，需要+2
+  // branch指令会补齐00在最后，所以需要右移两位
+  auto branchIns = Aarch64CPP::branch_immediate_consistent_conditional(0x2, 0b0111);
+  auto branch = littleEdian(branchIns);
+  executable.insert(executable.end(), branch.begin(), branch.end());
+
+  // mov 24 to x0
+  auto movIns2 = Aarch64CPP::mov_wide_immediate(0, 24, 0);
+  auto mov2 = littleEdian(movIns2);
+  executable.insert(executable.end(), mov2.begin(), mov2.end());
+  teardown(executable);
+
+  FuncPtr func = createJit(executable);
+  int result = func();
+  ASSERT_EQ(42, result);
+}
+
+TEST(spec, test_bitfield_clear) {
+  GTEST_SKIP() << "bitfield clear enabled in ARMv8.2-A, skip the test for some platform!!";
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+  // mov  x0 #0xfffffff'fffffffff
+  embedMov64ToRegister(0xfffffff'fffffffff, 0, executable);
+  auto bitfieldIns = Aarch64CPP::bitfield_clear(1, 0, 0, 0b111001, 0);
+  auto bitfield = littleEdian(bitfieldIns);
+  executable.insert(executable.end(), bitfield.begin(), bitfield.end());
+  teardown(executable);
+  FuncPtr func = createJit(executable);
+  int result = func();
+  std::cout << "result is " << result << std::endl;
 }
 
 TEST(demo_test, return_42) {
