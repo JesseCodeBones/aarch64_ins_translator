@@ -877,3 +877,84 @@ TEST(spec, test_bitwise_bit_clear) {
   uint64_t result = func();
   ASSERT_EQ(0x00000000000000ff, result);
 }
+
+// TEST(spec, test_branch_with_link_immediate) {
+//   std::vector<uint8_t> executable = {};
+//   prepare(executable);
+
+//   {
+//     // mov x0 #42
+//     auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
+//     auto mov = littleEdian(movIns);
+//     executable.insert(executable.end(), mov.begin(), mov.end());
+
+//   }
+//   {
+//     // bl 2
+//     auto ins = Aarch64CPP::branch_with_link_immediate(2);
+//     auto bytes = littleEdian(ins);
+//     executable.insert(executable.end(), bytes.begin(), bytes.end());
+//   }
+//   {
+//     // mov x0 #24
+//     // this one will not take effect, because it has been jumped over
+//     auto ins = Aarch64CPP::mov_wide_immediate(0, 24, 0);
+//     auto bytes = littleEdian(ins);
+//     executable.insert(executable.end(), bytes.begin(), bytes.end());
+//   }
+//   {
+//     // ret
+//     auto ins = Aarch64CPP::ret_rn(30);
+//     auto bytes = littleEdian(ins);
+//     executable.insert(executable.end(), bytes.begin(), bytes.end());
+//   }
+
+//   teardown(executable);
+//   RetU64FuncPtr func = createRetU64Jit(executable);
+//   uint64_t result = func();
+//   ASSERT_EQ(42, result);
+// }
+
+
+// TEST(spec, test_break_point) {
+//   std::vector<uint8_t> executable = {};
+//   prepare(executable);
+
+//   {
+//     // mov x0 #42
+//     auto movIns = Aarch64CPP::break_point(42);
+//     auto mov = littleEdian(movIns);
+//     executable.insert(executable.end(), mov.begin(), mov.end());
+
+//   }
+
+//   teardown(executable);
+//   RetU64FuncPtr func = createRetU64Jit(executable);
+//   uint64_t result = func();
+//   ASSERT_EQ(42, result);
+// }
+
+
+TEST(spec, test_branch_target_identifier) {
+  std::vector<uint8_t> executable = {};
+  prepare(executable);
+
+  {
+    // bti c
+    auto movIns = Aarch64CPP::branch_target_identifier(0b01);
+    auto mov = littleEdian(movIns);
+    executable.insert(executable.end(), mov.begin(), mov.end());
+  }
+
+  {
+    // mov x0 #42
+    auto movIns = Aarch64CPP::mov_wide_immediate(0, 42, 0);
+    auto mov = littleEdian(movIns);
+    executable.insert(executable.end(), mov.begin(), mov.end());
+  }
+
+  teardown(executable);
+  RetU64FuncPtr func = createRetU64Jit(executable);
+  uint64_t result = func();
+  ASSERT_EQ(42, result);
+}

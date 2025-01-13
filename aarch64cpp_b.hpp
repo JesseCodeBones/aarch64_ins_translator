@@ -167,4 +167,143 @@ result to the destination register. integer d = UInt(Rd); integer n = UInt(Rn);
 static uint32_t bitwise_bit_clear(uint8_t sf, uint8_t opc, uint8_t shift,
                                   uint8_t rd, uint8_t rn, uint8_t rm,
                                   uint8_t imm6);
+
+/**
+BL
+Branch with Link branches to a PC-relative offset, setting the register X30 to PC+4. It provides a hint that this is a subroutine call.
+bits(64) offset = SignExtend(imm26:'00', 64);
+https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/BL--Branch-with-Link-
+ */
+static uint32_t branch_with_link_immediate(uint32_t imm26);
+/**
+BLR
+Branch with Link to Register calls a subroutine at an address in a register, setting register X30 to PC+4.
+https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/BLR--Branch-with-Link-to-Register-
+ */
+static uint32_t branch_with_link_register(uint8_t rn);
+
+/**
+Branch with Link to Register, with pointer authentication
+  @param Z 0: zero modifier, 1: register modifier
+
+  Key A, zero modifier (Z == 0 && M == 0 && Rm == 11111)
+  Key A, register modifier (Z == 1 && M == 0)
+  Key B, zero modifier (Z == 0 && M == 1 && Rm == 11111)
+  Key B, register modifier (Z == 1 && M == 1)
+
+  具体解释
+  BLRAA X1, X0:
+
+  跳转到 X0 指定的地址（例如 0x4000）。
+  将返回地址（当前 PC + 4）存储在 X1 中。
+  使用 PACIA 进行认证，确保返回地址的完整性。
+  BLRAAZ X1, X0:
+
+  跳转到 X0 指定的地址（例如 0x4000）。
+  将返回地址（当前 PC + 4）存储在 X1 中。
+  使用 PACIA 进行认证，并将认证码置零。
+  BLRAB X1, X0:
+
+  跳转到 X0 指定的地址（例如 0x4000）。
+  将返回地址（当前 PC + 4）存储在 X1 中。
+  使用 PACIB 进行认证，确保返回地址的完整性。
+  BLRABZ X1, X0:
+
+  跳转到 X0 指定的地址（例如 0x4000）。
+  将返回地址（当前 PC + 4）存储在 X1 中。
+  使用 PACIB 进行认证，并将认证码置零。
+ */
+
+static uint32_t branch_with_link_register_pointer_authentication(uint8_t Z, uint8_t M, uint8_t rn, uint8_t rm);
+
+
+/**
+BR
+Branch to Register branches unconditionally to an address in a register, with a hint that this is not a subroutine return.
+
+https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/BR--Branch-to-Register-
+ */
+static uint32_t branch_register(uint8_t rn);
+
+/**
+Branch to Register, with pointer authentication. 
+Branch to Register, with pointer authentication. This instruction authenticates the address in the general-purpose register that is specified by <Xn>, using a modifier and the specified key, and branches to the authenticated address.
+https://developer.arm.com/documentation/ddi0602/2022-06/Base-Instructions/BRAA--BRAAZ--BRAB--BRABZ--Branch-to-Register--with-pointer-authentication-
+ */
+static uint32_t branch_register_pointer_authentication(uint8_t Z, uint8_t M, uint8_t rn, uint8_t rm);
+
+/**
+BRB
+
+This instruction need el1 or higher privilege level.
+
+Branch Record Buffer. For more information, see op0==0b01, cache maintenance, TLB maintenance, and address translation instructions.
+
+This is an alias of SYS. This means:
+
+The encodings in this description are named to match the encodings of SYS.
+The description of SYS gives the operational pseudocode for this instruction.
+
+ */
+static uint32_t branch_record_buffer(uint8_t op2, uint8_t rt);
+
+
+/**
+BRK
+
+ESR_ELx 寄存器包含多个字段，其中包括异常类别（EC, Exception Class）和异常特定的状态（ISS, Instruction Specific Syndrome）
+
+Breakpoint instruction. A BRK instruction generates a Breakpoint Instruction exception. 
+The PE records the exception in ESR_ELx, using the EC value 0x3c, 
+and captures the value of the immediate argument in ESR_ELx.ISS.
+ */
+static uint32_t break_point(uint16_t imm16);
+
+
+/**
+BTI
+
+它通过在代码中插入 BTI 指令来标记合法的分支目标，从而防止攻击者利用分支目标注入漏洞。
+
+BTI 指令的作用
+防止未预期的分支目标：BTI 指令用于标记合法的分支目标，防止执行未预期的指令。
+兼容性检查：在受保护的内存区域内，当 PSTATE.BTYPE 不等于 0b00 时，BTI 指令会检查当前的 PSTATE.BTYPE 值是否与 BTI 指令的操作数兼容。如果兼容，则允许执行后续指令，否则会生成分支目标异常。
+NOP 行为：在未受保护的内存区域内，BTI 指令执行时相当于一个 NOP（No Operation）指令，不会产生任何效果。
+PSTATE.BTYPE 是程序状态寄存器（PSTATE）中的一个字段，用于指示当前的分支类型。它的值可以是以下之一：
+
+0b00：无分支类型检查。
+0b01：直接分支。
+0b10：间接分支。
+0b11：保留。
+.global _start
+
+_start:
+    // 标记合法的分支目标
+    BTI c
+
+    // 其他代码逻辑...
+
+    // 退出程序
+    MOV X8, #93          // syscall number for exit
+    MOV X0, #0           // exit code
+    SVC #0               // make syscall
+
+    	
+Is the type of indirection, encoded in op2<2:1>:
+
+op2<2:1>	<targets>
+00	(omitted)
+01	c
+10	j
+11	jc
+
+
+Branch Target Identification. A BTI instruction is used to guard against the execution of instructions which are not the intended target of a branch.
+Outside of a guarded memory region, a BTI instruction executes as a NOP. Within a guarded memory region while PSTATE.BTYPE != 0b00, a BTI instruction compatible with the current value of PSTATE.BTYPE will not generate a Branch Target Exception and will allow execution of subsequent instructions within the memory region.
+The operand <targets> passed to a BTI instruction determines the values of PSTATE.BTYPE which the BTI instruction is compatible with.
+
+ */
+static uint32_t branch_target_identifier(uint8_t op2);
+
+
 #endif
