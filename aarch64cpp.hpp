@@ -7,6 +7,7 @@ class Aarch64CPP {
 public:
 #include "./aarch64cpp_a.hpp"
 #include "./aarch64cpp_b.hpp"
+#include "./aarch64cpp_c.hpp"
 
   /**
     Move wide with keep moves an optionally-shifted 16-bit immediate value into
