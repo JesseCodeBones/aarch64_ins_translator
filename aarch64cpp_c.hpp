@@ -75,4 +75,22 @@ static uint32_t conditional_compare_with_register(uint8_t sf, uint8_t rm, uint8_
  */
 static uint32_t carry_flag_invert();
 
+
+/**
+
+    CINC
+    Conditional Increment returns, in the destination register, the value of the source register incremented by 1 if the condition is TRUE, and otherwise returns the value of the source register.
+
+    MOV X0, #5          // 将值 5 加载到寄存器 X0
+    MOV X1, #0          // 将值 0 加载到寄存器 X1
+
+    // 如果条件 EQ（相等）为真，则将 X0 的值加 1 并存储到 X1
+    // 否则，将 X0 的原始值存储到 X1
+    CINC X1, X0, EQ
+ */
+
+ static uint32_t conditional_increment_returns(uint8_t sf, uint8_t rm, uint8_t cond, uint8_t rn, uint8_t rd);
+
+ static uint32_t conditional_invert_returns(uint8_t sf, uint8_t rm, uint8_t cond, uint8_t rn, uint8_t rd);
+
 #endif

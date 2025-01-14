@@ -1,5 +1,5 @@
 #include "./aarch64cpp.hpp"
-
+#include <stdexcept>
 
 uint32_t Aarch64CPP::compare_and_swap_world_or_double_world(uint8_t x, uint8_t L, uint8_t rs, uint8_t oO, uint8_t rn, uint8_t rt){
     uint32_t instruction = 0b10001000101000000111110000000000;
@@ -106,4 +106,32 @@ uint32_t Aarch64CPP::conditional_compare_with_register(uint8_t sf, uint8_t rm, u
 
 uint32_t Aarch64CPP::carry_flag_invert(){
     return 0b11010101000000000100000000011111;
+}
+
+uint32_t Aarch64CPP::conditional_increment_returns(uint8_t sf, uint8_t rm, uint8_t cond, uint8_t rn, uint8_t rd){
+    if (rm == 0b11111 || rn == 0b11111) {
+        throw std::runtime_error("rm could not be 0b11111");
+    }
+
+    uint32_t instruction = 0b00011010100000000000010000000000;
+    instruction |= (sf & 0b1) << 31;
+    instruction |= (rm & 0b11111) << 16;
+    instruction |= (cond & 0b1111) << 12;
+    instruction |= (rn & 0b11111) << 5;
+    instruction |= (rd & 0b11111) << 0;
+    return instruction;
+}
+
+uint32_t Aarch64CPP::conditional_invert_returns(uint8_t sf, uint8_t rm, uint8_t cond, uint8_t rn, uint8_t rd){
+    if (rm == 0b11111 || rn == 0b11111) {
+        throw std::runtime_error("rm could not be 0b11111");
+    }
+
+    uint32_t instruction = 0b01011010100000000000000000000000;
+    instruction |= (sf & 0b1) << 31;
+    instruction |= (rm & 0b11111) << 16;
+    instruction |= (cond & 0b1111) << 12;
+    instruction |= (rn & 0b11111) << 5;
+    instruction |= (rd & 0b11111) << 0;
+    return instruction;
 }
