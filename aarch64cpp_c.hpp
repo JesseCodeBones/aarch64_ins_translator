@@ -1,5 +1,5 @@
-#ifndef AARCH64CPP_V_HPP
-#define AARCH64CPP_V_HPP
+#ifndef AARCH64CPP_C_HPP
+#define AARCH64CPP_C_HPP
 #include <cstdint>
 
 /**
