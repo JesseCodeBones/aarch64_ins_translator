@@ -11,6 +11,7 @@ public:
 #include "./aarch64cpp_d.hpp"
 #include "./aarch64cpp_e.hpp"
 #include "./aarch64cpp_g_to_i.hpp"
+#include "./aarch64cpp_l.hpp"
   /**
     Move wide with keep moves an optionally-shifted 16-bit immediate value into
     a register, keeping other bits unchanged.
